@@ -47,6 +47,8 @@ class Example(QWidget):
         super().__init__()
         typemap = ['map', 'sat', 'sat,skl']
         flagtypemap = 0
+        zoommap = ['0.001', '0.002', '0.003', '0.005', '0.011', '0.021', '0.040', '0.079', '0.157', '0.313', '0.625', '1.249', '2.500', '5.000', '10.000', '20.000', '40.000']
+        flagzoom = 0
         pygame.init()
         size = width, height = 650, 450
         x = '30.268110'
@@ -62,19 +64,19 @@ class Example(QWidget):
                     if event.key == pygame.K_ESCAPE:
                         running = 0
                     if event.key == pygame.K_LEFT:
-                        x = str(float(x) - 0.0001)
+                        x = str(float(x) - float(float(zoommap[flagzoom]) / 10))
                         a = y.split('.')
                         x += '0' * (6 - len(a[1]))
                     if event.key == pygame.K_RIGHT:
-                        x = str(float(x) + 0.0001)
+                        x = str(float(x) + float(float(zoommap[flagzoom]) / 10))
                         a = y.split('.')
                         x += '0' * (6 - len(a[1]))
                     if event.key == pygame.K_DOWN:
-                        y = str(float(y) - 0.0001)
+                        y = str(float(y) - float(float(zoommap[flagzoom]) / 10))
                         a = y.split('.')
                         y += '0' * (6 - len(a[1]))
                     if event.key == pygame.K_UP:
-                        y = str(float(y) + 0.0001)
+                        y = str(float(y) + float(float(zoommap[flagzoom]) / 10))
                         a = y.split('.')
                         y += '0' * (6 - len(a[1]))
                     if event.key == pygame.K_v:
@@ -82,28 +84,20 @@ class Example(QWidget):
                         if flagtypemap > 2:
                             flagtypemap = 0
                     if event.key == pygame.K_PAGEUP:
-                        if float(z) < 90:
-                            z = str(float(z) + 0.001)
-                            a = z.split('.')
-                            if len(a[1]) < 3:
-                                z += '0' * (3 - len(a[1]))
-                            print(z)
+                        if flagzoom < len(zoommap) - 1:
+                            flagzoom += 1
                     if event.key == pygame.K_PAGEDOWN:
-                        if float(z) > 0.001:
-                            z = str(float(z) - 0.001)
-                            a = z.split('.')
-                            if len(a[1]) < 3:
-                                z += '0' * (3 - len(a[1]))
-                            print(z)
+                        if flagzoom > 0:
+                            flagzoom -= 1
             screen.fill((0, 0, 0))
             sait = "http://static-maps.yandex.ru/1.x/?ll="
             sait += x
             sait += ','
             sait += y
             sait += "&spn="
-            sait += z
+            sait += zoommap[flagzoom]
             sait += ","
-            sait += z
+            sait += zoommap[flagzoom]
             sait += "&l="
             sait += typemap[flagtypemap]
             sait += "&size="
