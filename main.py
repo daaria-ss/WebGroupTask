@@ -42,14 +42,19 @@ class Example(QWidget):
         
         font = pygame.font.Font(None, 24)
         input_box = pygame.Rect(10, 10, 140, 32)
+        input_box_adress = pygame.Rect(10, 400, 140, 25)
         color_inactive = pygame.Color((150, 150, 150))
         color_active = pygame.Color((50, 50, 50))
         color = color_inactive
+        color_adress = pygame.Color((50, 50, 50))
         active = False
+        active_adress = False
         text = 'Поиск'
+        text_adress = '198096'
         flagmetka = 0
         xmetka = 0
         ymetka = 0
+        flagindex = 1
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -64,6 +69,13 @@ class Example(QWidget):
                         if event.pos[1] >= 10 and event.pos[1] <= 45:
                             text = ''
                             flagmetka = 0
+                    if event.pos[0] >= 160 and event.pos[0] <= 390:
+                        if event.pos[1] >= 390 and event.pos[1] <= 440:
+                            if flagindex == 0:
+                                flagindex = 1
+                            else:
+                                if flagindex == 1:
+                                    flagindex = 0
                     if event.pos[0] >= 470 and event.pos[0] <= 570:
                         if event.pos[1] >= 10 and event.pos[1] <= 45:
                             geocoder_request = "http://geocode-maps.yandex.ru/1.x/?apikey=40d1649f-0493-4b70-98ba-98533de7710b&geocode="
@@ -77,25 +89,38 @@ class Example(QWidget):
                                     toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
                                 except:
                                     pass
-                                toponym_address = toponym["metaDataProperty"]["GeocoderMetaData"]["text"]
-                                toponym_coodrinates = toponym["Point"]["pos"]
-                                toponym_coodrinates = toponym_coodrinates.split(' ')
-                                toponym_address = toponym_address.split(', ')
-                                x = toponym_coodrinates[0]
-                                y = toponym_coodrinates[1]
-                                xmetka = x
-                                ymetka = y
-                                text = ''
-                                for i in range(len(toponym_address)):
-                                    text += toponym_address[i]
-                                    text += ' '
-                                if len(toponym_address) >= 3:
-                                    flagzoom = 2
-                                if len(toponym_address) == 2:
-                                    flagzoom = 7
-                                if len(toponym_address) == 1:
-                                    flagzoom = 15
-                                flagmetka = 1
+                                try:
+                                    toponym_address = toponym["metaDataProperty"]["GeocoderMetaData"]["text"]
+                                    toponym_coodrinates = toponym["Point"]["pos"]
+                                    toponym_coodrinates = toponym_coodrinates.split(' ')
+                                    toponym_address = toponym_address.split(', ')
+                                    x = toponym_coodrinates[0]
+                                    y = toponym_coodrinates[1]
+                                    xmetka = x
+                                    ymetka = y
+                                    text = ''
+                                    for i in range(len(toponym_address)):
+                                        text += toponym_address[i]
+                                        text += ' '
+                                    if len(toponym_address) >= 3:
+                                        flagzoom = 2
+                                    if len(toponym_address) == 2:
+                                        flagzoom = 7
+                                    if len(toponym_address) == 1:
+                                        flagzoom = 15
+                                    if flagindex == 1:
+                                        text1 = text.replace(' ', ', ')
+                                        json_data  = {"query":text1,"limit":5,"fromBound":"CITY"}
+                                        resp = requests.post('https://www.pochta.ru/suggestions/v2/suggestion.find-addresses', json=json_data)
+                                        resp.json()
+                                        try:
+                                            text_adress = resp.json()[0]['postalCode']
+                                        except:
+                                            text_adress = ''
+                                    flagmetka = 1
+                                except:
+                                    text = 'Error'
+                                    flagmetka = 0
                 if event.type == pygame.KEYDOWN:
                     if active:
                         if event.key == pygame.K_BACKSPACE:
@@ -171,12 +196,22 @@ class Example(QWidget):
             all_sprites.add(sprite2)
             sprite2.rect.x = 415
             sprite2.rect.y = 10
+            sprite3 = pygame.sprite.Sprite()
+            sprite3.image = load_image("Button1.png")
+            sprite3.rect = sprite3.image.get_rect()
+            all_sprites.add(sprite3)
+            sprite3.rect.x = 160
+            sprite3.rect.y = 390
             all_sprites.draw(screen)
             txt_surface = font.render(text, True, color)
+            txt_surface_adress = font.render(text_adress, True, color_adress)
             width = max(400, txt_surface.get_width()+10)
             input_box.w = width
             screen.blit(txt_surface, (input_box.x+5, input_box.y+5))
             pygame.draw.rect(screen, color, input_box, 2)
+            if flagindex == 1:
+                screen.blit(txt_surface_adress, (input_box_adress.x+5, input_box_adress.y+5))
+                pygame.draw.rect(screen, color_adress, input_box_adress, 2)
             pygame.display.flip()
             pygame.time.delay(1)
         pygame.quit()
